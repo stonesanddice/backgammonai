@@ -179,4 +179,24 @@ public class MoveGenerator
 
         return nextState;
     }
+
+    public static GameState ApplyTurn(GameState state, Turn turn)
+    {
+        GameState result = state;
+        foreach (var move in turn.Moves)
+        {
+            result = CloneAndApplyMove(result, move);
+        }
+
+        // Crucial: After a human applies a turn, we must manually 
+        // sync the new board state to the internal 2D 'Board' array 
+        // so the PositionID and Visualizer stay updated.
+        for (int i = 0; i <= 24; i++)
+        {
+            result.Board[0, i] = result.Player1Checkers[i];
+            result.Board[1, i] = result.Player2Checkers[i];
+        }
+
+        return result;
+    }
 }

@@ -52,20 +52,50 @@ namespace EngineCLI
                 state.Dice1 = rng.Next(1, 7);
                 state.Dice2 = rng.Next(1, 7);
 
-                // Draw the board!
                 BoardVisualizer.PrintBoard(state, match);
 
-                // Ask the AI for the best move (Using 1-ply. Change to 2-ply once weights are loaded!)
-                Turn? bestTurn = ai.GetBestTurn(state, match, depth: 1);
+                if (state.PlayerOnRoll == 0) // YOUR TURN
+                {
+                    List<Turn> legalTurns = MoveGenerator.GenerateLegalTurns(state);
 
-                if (bestTurn == null || bestTurn.Moves.Count == 0)
-                {
-                    Console.WriteLine(">> AI Dances! (No legal moves)\n");
+                    if (legalTurns.Count == 0)
+                    {
+                        Console.WriteLine(">> You have no legal moves. You dance!");
+                    }
+                    else
+                    {
+                        bool validMoveEntered = false;
+                        while (!validMoveEntered)
+                        {
+                            Console.WriteLine($">> YOUR TURN! Dice: {state.Dice1}-{state.Dice2}");
+                            Console.Write("Enter move (e.g., '24/20 13/9'): ");
+                            string? input = Console.ReadLine();
+
+                            Turn? humanTurn = InputParser.ParseHumanTurn(input ?? "", state);
+
+                            // Check if the move you typed is actually allowed by the rules
+                            if (humanTurn != null && legalTurns.Any(t => t.ToString() == humanTurn.ToString()))
+                            {
+                                state = MoveGenerator.ApplyTurn(state, humanTurn);
+                                validMoveEntered = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine("!! ILLEGAL MOVE !! Try again. (Example format: 24/20 13/9)");
+                            }
+                        }
+                    }
                 }
-                else
+                else // AI TURN
                 {
-                    Console.WriteLine($">> AI Plays: {bestTurn}\n");
-                    state = bestTurn.ResultingState;
+                    Console.WriteLine($">> AI is thinking (2-ply)...");
+                    Turn? bestTurn = ai.GetBestTurn(state, match, depth: 2);
+
+                    if (bestTurn != null)
+                    {
+                        Console.WriteLine($">> AI Plays: {bestTurn}");
+                        state = bestTurn.ResultingState!;
+                    }
                 }
 
                 // Check for Game Over 
