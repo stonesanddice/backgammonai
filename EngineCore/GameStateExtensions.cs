@@ -21,7 +21,7 @@ namespace EngineCore
             }
 
             StringBuilder sb = new StringBuilder();
-            
+
             sb.AppendLine($" Stones+Dice C#     Position ID: {PositionId.Encode(state)}");
             sb.AppendLine(" " + ASCII_12_01);
 
@@ -35,15 +35,15 @@ namespace EngineCore
 
                 sb.Append("|");
 
-                if (row == ASCII_BOARD_HEIGHT / 2) 
+                if (row == ASCII_BOARD_HEIGHT / 2)
                 {
                     sb.Append("BAR");
                 }
                 else
                 {
-                    int p2Bar = state.Player2Checkers[24]; 
-                    int p1Bar = state.Player1Checkers[24]; 
-                    
+                    int p2Bar = state.Player2Checkers[24];
+                    int p1Bar = state.Player1Checkers[24];
+
                     if (row < 5 && p2Bar > row) sb.Append(" X ");
                     else if (row > 5 && p1Bar > (10 - row)) sb.Append(" O ");
                     else sb.Append("   ");
@@ -74,19 +74,19 @@ namespace EngineCore
         {
             string[,] matrix = new string[ASCII_BOARD_HEIGHT, 12];
             for (int r = 0; r < ASCII_BOARD_HEIGHT; r++)
-            for (int c = 0; c < 12; c++) matrix[r, c] = "   ";
+                for (int c = 0; c < 12; c++) matrix[r, c] = "   ";
 
             for (int i = 0; i < 6; i++)
             {
                 // TOP HALF: Points 12-7 (Left) and 6-1 (Right)
-                int topIdxLeft = 11 - i;   
-                int topIdxRight = 5 - i;    
+                int topIdxLeft = 11 - i;
+                int topIdxRight = 5 - i;
                 FillColumn(matrix, i, state.Player1Checkers[topIdxLeft], state.Player2Checkers[23 - topIdxLeft], true);
                 FillColumn(matrix, i + 6, state.Player1Checkers[topIdxRight], state.Player2Checkers[23 - topIdxRight], true);
 
                 // BOTTOM HALF: Points 13-18 (Left) and 19-24 (Right)
-                int botIdxLeft = 12 + i;   
-                int botIdxRight = 18 + i;  
+                int botIdxLeft = 12 + i;
+                int botIdxRight = 18 + i;
                 FillColumn(matrix, i, state.Player1Checkers[botIdxLeft], state.Player2Checkers[23 - botIdxLeft], false);
                 FillColumn(matrix, i + 6, state.Player1Checkers[botIdxRight], state.Player2Checkers[23 - botIdxRight], false);
             }
@@ -97,13 +97,13 @@ namespace EngineCore
         {
             int count = p1 > 0 ? p1 : p2;
             if (count <= 0) return;
-    
+
             string symbol = p1 > 0 ? " O " : " X ";
 
             for (int i = 0; i < Math.Min(count, ASCII_MAX_CHECKERS); i++)
             {
                 int row = isTop ? i : (ASCII_BOARD_HEIGHT - 1 - i);
-        
+
                 if (count > ASCII_MAX_CHECKERS && i == ASCII_MAX_CHECKERS - 1)
                     matrix[row, col] = count < 10 ? $" {count} " : $"{count} ";
                 else

@@ -19,7 +19,7 @@ namespace EngineTests
             // Assert
             // In GNUBG, the board is encoded from the perspective of the player on roll.
             // Player 0 is the player whose turn it is.
-            
+
             // Assert Player 0's checker counts
             Assert.Equal(5, state.GetCheckers(player: 0, point: 6));
             Assert.Equal(3, state.GetCheckers(player: 0, point: 8));
@@ -64,7 +64,7 @@ namespace EngineTests
 
             // Act & Assert
             var exception = Assert.Throws<ArgumentException>(() => PositionId.Decode(invalidId));
-            
+
             // Optional: Assert the exception message is helpful
             Assert.Contains("14 characters", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -74,7 +74,7 @@ namespace EngineTests
         {
             // Arrange
             // Contains invalid characters like '$' and '%'
-            string invalidId = "4HPwA$Dgc/%BMA"; 
+            string invalidId = "4HPwA$Dgc/%BMA";
 
             // Act & Assert
             Assert.Throws<FormatException>(() => PositionId.Decode(invalidId));

@@ -2,9 +2,9 @@
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "master" ]
 
 jobs:
   build-and-test:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '7.0.x' # Matches your EngineTests net7.0 target
+          dotnet-version: '7.0.x'
 
       - name: Restore dependencies
         run: dotnet restore
@@ -25,5 +25,12 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      - name: Run xUnit Tests
-        run: dotnet test --no-build --configuration Release --verbosity normal
+      - name: Run Tests with Coverage
+        # We add the coverage flags here. 
+        # Threshold=45 means the build fails if coverage is lower than 45%.
+        run: |
+          dotnet test --no-build --configuration Release \
+          /p:CollectCoverage=true \
+          /p:Threshold=45 \
+          /p:ThresholdType=line \
+          /p:CoverletOutputFormat=opencover

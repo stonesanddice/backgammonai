@@ -42,7 +42,7 @@ namespace EngineTests
         {
             // Arrange
             var turn = new Turn();
-            
+
             // Act
             turn.DiceUsed.AddRange(new[] { 6, 6, 6, 6 }); // A "doubles" turn
 

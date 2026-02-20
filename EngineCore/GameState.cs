@@ -25,7 +25,7 @@ namespace EngineCore
         public int MatchLength { get; set; }
         public int Player1Score { get; set; }
         public int Player2Score { get; set; }
-        
+
         // [Player, Point]
         // Player 0 is on roll, Player 1 is the opponent.
         // Points 0-23 are the board, index 24 is the Bar.

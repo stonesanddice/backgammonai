@@ -50,7 +50,8 @@ namespace EngineCore
 
         static FeatureEncoder()
         {
-            for (int i = 0; i < 4096; ++i) {
+            for (int i = 0; i < 4096; ++i)
+            {
                 int c = 0;
                 for (int n0 = 0; n0 <= 5; n0++)
                     for (int n1 = 0; n1 <= n0; n1++)
@@ -59,7 +60,8 @@ namespace EngineCore
                 anEscapes[i] = c;
             }
             anEscapes1[0] = 0;
-            for (int i = 1; i < 4096; i++) {
+            for (int i = 1; i < 4096; i++)
+            {
                 int c = 0, low = 0;
                 while ((i & (1 << low)) == 0) ++low;
                 for (int n0 = 0; n0 <= 5; n0++)
@@ -88,7 +90,8 @@ namespace EngineCore
 
         private static void EncodeBase(float[] inputs, int offset, int[] board)
         {
-            for (int i = 0; i < 24; i++) {
+            for (int i = 0; i < 24; i++)
+            {
                 int nc = board[i];
                 inputs[offset++] = nc == 1 ? 1f : 0f;
                 inputs[offset++] = nc == 2 ? 1f : 0f;
@@ -105,7 +108,7 @@ namespace EngineCore
         private static void EncodeHalf(float[] inputs, int offset, int[] board, int[] opp)
         {
             int oppBack = GetOppBack(opp);
-            
+
             // OFF1, OFF2, OFF3
             int menOff = 15;
             for (int i = 0; i < 25; i++) menOff -= board[i];
@@ -175,7 +178,8 @@ namespace EngineCore
             int ti = 23;
             for (; ti >= 12 && ti > oppBack; --ti) if (board[ti] > 0 && board[ti] != 2) { int n = board[ti] > 2 ? board[ti] - 2 : 1; no += n; t += ti * n; }
             for (; ti >= 6; --ti) if (board[ti] > 0) { int n = board[ti]; no += n; t += ti * n; }
-            for (ti = 5; ti >= 0; --ti) {
+            for (ti = 5; ti >= 0; --ti)
+            {
                 if (board[ti] > 2) { t += ti * (board[ti] - 2); no += board[ti] - 2; }
                 else if (board[ti] < 2) { int n = 2 - board[ti]; if (no >= n) { t -= ti * n; no -= n; } }
             }
@@ -183,8 +187,10 @@ namespace EngineCore
 
             // BACKBONE
             int pa = -1, bbw = 0, bbtot = 0;
-            for (int np = 23; np > 0; --np) {
-                if (board[np] >= 2) {
+            for (int np = 23; np > 0; --np)
+            {
+                if (board[np] >= 2)
+                {
                     if (pa == -1) { pa = np; continue; }
                     int d = pa - np;
                     bbw += (d <= 6 ? 11 : (d <= 11 ? 13 - d : 0)) * board[pa];
@@ -211,22 +217,31 @@ namespace EngineCore
             for (int i = 0; i < 6; i++) if (board[i] >= 2) nBoard++;
 
             int[] aHit = new int[39];
-            for (int i = nBoard > 2 ? 23 : 21; i >= 0; i--) {
-                if (opp[i] == 1) {
-                    for (int j = 24 - i; j < 25; j++) {
-                        if (board[j] > 0 && !(j < 6 && board[j] == 2)) {
-                            for (int n = 0; n < 5; n++) {
+            for (int i = nBoard > 2 ? 23 : 21; i >= 0; i--)
+            {
+                if (opp[i] == 1)
+                {
+                    for (int j = 24 - i; j < 25; j++)
+                    {
+                        if (board[j] > 0 && !(j < 6 && board[j] == 2))
+                        {
+                            for (int n = 0; n < 5; n++)
+                            {
                                 int comb = aanCombination[j - 24 + i, n];
                                 if (comb == -1) break;
                                 OneWayToHit pi = aIntermediate[comb];
-                                if (pi.fAll) {
-                                    if (pi.nFaces > 1) {
+                                if (pi.fAll)
+                                {
+                                    if (pi.nFaces > 1)
+                                    {
                                         bool blocked = false;
                                         for (int k = 0; k < 3 && pi.anIntermediate[k] > 0; k++)
                                             if (opp[i - pi.anIntermediate[k]] > 1) { blocked = true; break; }
                                         if (blocked) continue;
                                     }
-                                } else {
+                                }
+                                else
+                                {
                                     if (opp[i - pi.anIntermediate[0]] > 1 && opp[i - pi.anIntermediate[1]] > 1) continue;
                                 }
                                 aHit[comb] |= 1 << j;
@@ -237,17 +252,23 @@ namespace EngineCore
             }
 
             RollInfo[] aRoll = new RollInfo[21];
-            if (board[24] == 0) {
-                for (int i = 0; i < 21; i++) {
+            if (board[24] == 0)
+            {
+                for (int i = 0; i < 21; i++)
+                {
                     int lastK = -1;
-                    for (int j = 0; j < 4; j++) {
+                    for (int j = 0; j < 4; j++)
+                    {
                         int r = aaRoll[i, j];
                         if (r < 0) break;
                         if (aHit[r] == 0) continue;
                         OneWayToHit pi = aIntermediate[r];
-                        if (pi.nFaces == 1) {
-                            for (int k = 23; k > 0; k--) {
-                                if ((aHit[r] & (1 << k)) != 0) {
+                        if (pi.nFaces == 1)
+                        {
+                            for (int k = 23; k > 0; k--)
+                            {
+                                if ((aHit[r] & (1 << k)) != 0)
+                                {
                                     if (lastK != k || board[k] > 1) aRoll[i].nChequers++;
                                     lastK = k;
                                     if (k - pi.nPips + 1 > aRoll[i].nPips) aRoll[i].nPips = k - pi.nPips + 1;
@@ -255,7 +276,9 @@ namespace EngineCore
                                     break;
                                 }
                             }
-                        } else {
+                        }
+                        else
+                        {
                             if (aRoll[i].nChequers == 0) aRoll[i].nChequers = 1;
                             int maxK = -1;
                             for (int k = 23; k >= 0; k--) if ((aHit[r] & (1 << k)) != 0) { maxK = k; break; }
@@ -265,19 +288,27 @@ namespace EngineCore
                         }
                     }
                 }
-            } else if (board[24] == 1) {
-                for (int i = 0; i < 21; i++) {
+            }
+            else if (board[24] == 1)
+            {
+                for (int i = 0; i < 21; i++)
+                {
                     int lastN = 0;
-                    for (int j = 0; j < 4; j++) {
+                    for (int j = 0; j < 4; j++)
+                    {
                         int r = aaRoll[i, j];
                         if (r < 0) break;
                         if (aHit[r] == 0) continue;
                         OneWayToHit pi = aIntermediate[r];
-                        if (pi.nFaces == 1) {
-                            for (int k = 24; k > 0; k--) {
-                                if ((aHit[r] & (1 << k)) != 0) {
+                        if (pi.nFaces == 1)
+                        {
+                            for (int k = 24; k > 0; k--)
+                            {
+                                if ((aHit[r] & (1 << k)) != 0)
+                                {
                                     if (lastN != 0 && k != 24) break;
-                                    if (k != 24) {
+                                    if (k != 24)
+                                    {
                                         int npip = aIntermediate[aaRoll[i, 1 - j]].nPips;
                                         if (opp[npip - 1] > 1) break;
                                         lastN = 1;
@@ -286,7 +317,9 @@ namespace EngineCore
                                     if (k - pi.nPips + 1 > aRoll[i].nPips) aRoll[i].nPips = k - pi.nPips + 1;
                                 }
                             }
-                        } else {
+                        }
+                        else
+                        {
                             if ((aHit[r] & (1 << 24)) == 0) continue;
                             if (aRoll[i].nChequers == 0) aRoll[i].nChequers = 1;
                             if (25 - pi.nPips > aRoll[i].nPips) aRoll[i].nPips = 25 - pi.nPips;
@@ -295,9 +328,13 @@ namespace EngineCore
                         }
                     }
                 }
-            } else {
-                for (int i = 0; i < 21; i++) {
-                    for (int j = 0; j < 2; j++) {
+            }
+            else
+            {
+                for (int i = 0; i < 21; i++)
+                {
+                    for (int j = 0; j < 2; j++)
+                    {
                         int r = aaRoll[i, j];
                         if ((aHit[r] & (1 << 24)) == 0) continue;
                         OneWayToHit pi = aIntermediate[r];
@@ -309,7 +346,8 @@ namespace EngineCore
             }
 
             int np = 0, n1 = 0, n2 = 0;
-            for (int i = 0; i < 21; i++) {
+            for (int i = 0; i < 21; i++)
+            {
                 int w = aaRoll[i, 3] >= 0 ? 1 : 2;
                 int nc = aRoll[i].nChequers;
                 np += aRoll[i].nPips * w;
@@ -334,14 +372,19 @@ namespace EngineCore
         private static int EnterLoss(int[] op, bool two)
         {
             int loss = 0;
-            for (int i = 0; i < 6; ++i) {
-                if (op[i] > 1) {
+            for (int i = 0; i < 6; ++i)
+            {
+                if (op[i] > 1)
+                {
                     loss += 4 * (i + 1);
-                    for (int j = i + 1; j < 6; ++j) {
+                    for (int j = i + 1; j < 6; ++j)
+                    {
                         if (op[j] > 1) loss += 2 * (i + j + 2);
                         else if (two) loss += 2 * (i + 1);
                     }
-                } else if (two) {
+                }
+                else if (two)
+                {
                     for (int j = i + 1; j < 6; ++j) if (op[j] > 1) loss += 2 * (j + 1);
                 }
             }

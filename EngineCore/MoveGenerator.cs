@@ -8,8 +8,8 @@ public class MoveGenerator
     public static List<Turn> GenerateLegalTurns(GameState currentState)
     {
         var allTurns = new List<Turn>();
-        
-        List<int> dice = currentState.Dice1 == currentState.Dice2 
+
+        List<int> dice = currentState.Dice1 == currentState.Dice2
             ? new List<int> { currentState.Dice1, currentState.Dice1, currentState.Dice1, currentState.Dice1 }
             : new List<int> { currentState.Dice1, currentState.Dice2 };
 
@@ -24,10 +24,10 @@ public class MoveGenerator
         if (maxDicePlayed == 1 && currentState.Dice1 != currentState.Dice2)
         {
             int maxDieRolled = Math.Max(currentState.Dice1, currentState.Dice2);
-            
+
             // Did any of our 1-die turns manage to use the larger die?
             bool canPlayLarger = validTurns.Any(t => t.DiceUsed.Contains(maxDieRolled));
-            
+
             if (canPlayLarger)
             {
                 // If so, delete the turns that only used the smaller die
@@ -42,11 +42,11 @@ public class MoveGenerator
     {
         if (remainingDice.Count == 0)
         {
-            allTurns.Add(new Turn 
-            { 
-                Moves = new List<Move>(currentMoves), 
+            allTurns.Add(new Turn
+            {
+                Moves = new List<Move>(currentMoves),
                 DiceUsed = new List<int>(currentDiceUsed),
-                ResultingState = state 
+                ResultingState = state
             });
             return;
         }
@@ -61,18 +61,18 @@ public class MoveGenerator
                 if (IsLegalMove(state, point, die, out Move move))
                 {
                     madeAnyMove = true;
-                    
+
                     GameState nextState = CloneAndApplyMove(state, move);
-                    
+
                     var nextDice = new List<int>(remainingDice);
                     nextDice.Remove(die);
-                    
+
                     currentMoves.Add(move);
                     currentDiceUsed.Add(die);
-                    
+
                     // Recurse deeper
                     FindMoves(nextState, nextDice, currentMoves, currentDiceUsed, allTurns);
-                    
+
                     // Backtrack
                     currentMoves.RemoveAt(currentMoves.Count - 1);
                     currentDiceUsed.RemoveAt(currentDiceUsed.Count - 1);
@@ -83,11 +83,11 @@ public class MoveGenerator
         // If we have dice left but no legal moves exist, save the partial turn
         if (!madeAnyMove && currentMoves.Count > 0)
         {
-            allTurns.Add(new Turn 
-            { 
-                Moves = new List<Move>(currentMoves), 
+            allTurns.Add(new Turn
+            {
+                Moves = new List<Move>(currentMoves),
                 DiceUsed = new List<int>(currentDiceUsed),
-                ResultingState = state 
+                ResultingState = state
             });
         }
     }
@@ -151,7 +151,7 @@ public class MoveGenerator
         {
             Player1Checkers = (int[])state.Player1Checkers.Clone(),
             Player2Checkers = (int[])state.Player2Checkers.Clone(),
-        
+
             // Pass along the match context (score, cube, etc.)
             CubeValue = state.CubeValue,
             MatchLength = state.MatchLength,

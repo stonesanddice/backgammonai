@@ -14,6 +14,7 @@
         public int MatchLength { get; set; } // 0 means Money Game
         public int Player0Score { get; set; }
         public int Player1Score { get; set; }
-        public bool JacobyRule { get; set; } 
+        public bool JacobyRule { get; set; }
+        public bool BeaversAllowed { get; set; }
     }
 }
