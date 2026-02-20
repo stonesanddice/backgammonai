@@ -8,19 +8,25 @@ namespace EngineCore
 
         /// <summary>
         /// Translates a GameState into a 14-character GNUBG Position ID.
-        /// (Equivalent to oldPositionIDFromKey and oldPositionKey in GNUBG)
+        /// Always encodes from the perspective of the player currently on roll.
         /// </summary>
         public static string Encode(GameState state)
         {
             byte[] auch = new byte[10];
             int iBit = 0;
 
+            // Map the arrays: Active player first, Opponent second
+            int[] active = state.PlayerOnRoll == 0 ? state.Player2Checkers : state.Player1Checkers;
+            int[] opponent = state.PlayerOnRoll == 0 ? state.Player1Checkers : state.Player2Checkers;
+
+            int[][] boards = new[] { active, opponent };
+
             // 1. Pack the board into 80 bits (10 bytes)
             for (int i = 0; i < 2; i++)
             {
                 for (int j = 0; j < 25; j++)
                 {
-                    int nc = state.Board[i, j];
+                    int nc = boards[i][j];
                     if (nc > 0)
                     {
                         AddBits(auch, iBit, nc);
@@ -57,7 +63,6 @@ namespace EngineCore
 
         /// <summary>
         /// Translates a 14-character GNUBG Position ID into a GameState.
-        /// (Equivalent to PositionFromID and oldPositionFromKey in GNUBG)
         /// </summary>
         public static GameState Decode(string positionId)
         {
@@ -69,13 +74,11 @@ namespace EngineCore
             byte[] auch = new byte[10];
             byte[] pch = new byte[14];
 
-            // 1. Map Base64 chars to 6-bit values
             for (int i = 0; i < 14; i++)
             {
                 pch[i] = Base64CharToByte(positionId[i]);
             }
 
-            // 2. Unpack the 14 Base64 values into 10 bytes
             int puchIdx = 0;
             int pchIdx = 0;
             for (int i = 0; i < 3; i++)
@@ -88,8 +91,11 @@ namespace EngineCore
             }
             auch[puchIdx] = (byte)((pch[pchIdx] << 2) | (pch[pchIdx + 1] >> 4));
 
-            // 3. Decode the 10 bytes into the board
             GameState state = new GameState();
+
+            // A decoded position ID is always assumed to be Player 0's turn
+            state.PlayerOnRoll = 0;
+
             int player = 0;
             int point = 0;
 
@@ -103,10 +109,12 @@ namespace EngineCore
                     {
                         if (player >= 2 || point >= 25)
                         {
-                            // GNUBG error guard: string is malformed
                             return state;
                         }
-                        state.Board[player, point]++;
+
+                        // Populate 1D arrays directly
+                        if (player == 0) state.Player2Checkers[point]++;
+                        else state.Player1Checkers[point]++;
                     }
                     else
                     {
@@ -124,9 +132,6 @@ namespace EngineCore
             return state;
         }
 
-        /// <summary>
-        /// Replicates GNUBG's bitwise shifting injection for generating keys.
-        /// </summary>
         private static void AddBits(byte[] auchKey, int bitPos, int nBits)
         {
             int k = bitPos / 8;
@@ -146,9 +151,6 @@ namespace EngineCore
             }
         }
 
-        /// <summary>
-        /// Custom GNUBG Base64 decoder function.
-        /// </summary>
         private static byte Base64CharToByte(char ch)
         {
             if (ch >= 'A' && ch <= 'Z') return (byte)(ch - 'A');
@@ -157,7 +159,6 @@ namespace EngineCore
             if (ch == '+') return 62;
             if (ch == '/') return 63;
 
-            // Throw standard FormatException to satisfy our tests for invalid characters
             throw new FormatException($"Invalid Base64 character encountered: {ch}");
         }
     }

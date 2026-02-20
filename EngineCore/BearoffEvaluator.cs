@@ -1,53 +1,127 @@
 ﻿using System;
+using System.IO;
 
 namespace EngineCore
 {
     public class BearoffEvaluator
     {
-        // In a full implementation, you would load gnubg_ts.bd and gnubg_os.bd into memory here.
-        // private byte[] _tsDatabase;
-        // private byte[] _osDatabase;
+        private readonly byte[]? _tsDatabase;
+        private readonly bool _isTsLoaded;
 
-        public BearoffEvaluator(string dbPath)
+        // Exact size of the standard GNUBG 6-checker TS database
+        private const int ExpectedTsSize = 6830248;
+        private const int TsHeaderSize = 40;
+        private const int TsRecordSize = 8;
+        private const int TsMaxId = 923; // 6 checkers on 6 points = 924 IDs (0-923)
+
+        public BearoffEvaluator(string dataDirectory)
         {
-            // Load binary databases here
+            string tsDbPath = Path.Combine(dataDirectory, "gnubg_ts0.bd");
+            string osDbPath = Path.Combine(dataDirectory, "gnubg_os0.bd");
+
+            // 1. Load Two-Sided Database
+            if (File.Exists(tsDbPath))
+            {
+                _tsDatabase = File.ReadAllBytes(tsDbPath);
+
+                if (_tsDatabase.Length == ExpectedTsSize)
+                {
+                    _isTsLoaded = true;
+                    Console.WriteLine("Successfully loaded Two-Sided Bearoff Database (gnubg_ts0.bd).");
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: gnubg_ts0.bd size mismatch. Expected {ExpectedTsSize}, got {_tsDatabase.Length}.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Warning: gnubg_ts0.bd not found. Deep endgames will fallback to Neural Net.");
+            }
+
+            // 2. We'll verify OS database exists for future implementation
+            if (File.Exists(osDbPath))
+            {
+                Console.WriteLine("Found One-Sided Bearoff Database (gnubg_os0.bd) for future use.");
+                // We will load OS bytes here when we implement the convolution math!
+            }
+        }
+
+        public float[]? Evaluate(uint idOnRoll, uint idWaiting, PositionClass pc)
+        {
+            // Handle Two-Sided Bearoffs (Both players have <= 6 checkers)
+            if (pc == PositionClass.BearoffTwoSided && _isTsLoaded && _tsDatabase != null)
+            {
+                // Safety check to ensure we don't read out of bounds
+                if (idOnRoll <= TsMaxId && idWaiting <= TsMaxId)
+                {
+                    // Calculate the exact byte offset for this specific matchup
+                    // It's a 2D grid: (Row * TotalColumns) + Column
+                    int matchupIndex = (int)((idOnRoll * (TsMaxId + 1)) + idWaiting);
+
+                    int byteOffset = TsHeaderSize + (matchupIndex * TsRecordSize);
+
+                    // GNUBG stores the base cubeless equity in the first 2 bytes of the record
+                    ushort rawEquity = BitConverter.ToUInt16(_tsDatabase, byteOffset);
+
+                    // Convert GNUBG's short format to a standard float (-1.0 to 1.0)
+                    float cubelessEquity = rawEquity / 32768.0f;
+
+                    // Convert Equity back into a raw Win Probability (0.0 to 1.0)
+                    // Since gammons are mathematically impossible with <= 6 checkers:
+                    // Equity = (Win * 2) - 1  --->  Win = (Equity + 1) / 2
+                    float winProb = (cubelessEquity + 1.0f) / 2.0f;
+
+                    // Clamp to strictly [0.0, 1.0] just in case of rounding artifacts
+                    winProb = Math.Clamp(winProb, 0.0f, 1.0f);
+
+                    return new float[]
+                    {
+                        winProb,
+                        0.0f, // Win Gammon
+                        0.0f, // Win Backgammon
+                        0.0f, // Lose Gammon
+                        0.0f  // Lose Backgammon
+                    };
+                }
+            }
+
+            // If it's a One-Sided bearoff (one player has 7+ checkers), or DB is missing,
+            // returning null tells the Search Engine to safely fall back to the Neural Net.
+            return null;
         }
 
         /// <summary>
-        /// Evaluates a pure bearoff position.
-        /// Replicates the behavior of EvalBearoff2 and EvalBearoffOS in GNUBG's eval.c.
+        /// Calculates the exact win probability by cross-multiplying two One-Sided roll distributions.
         /// </summary>
-        public float[] Evaluate(uint player1Id, uint player2Id, PositionClass pc)
+        /// <param name="onRollDist">The probability distribution of rolls required for the player to bear off.</param>
+        /// <param name="waitingDist">The probability distribution of rolls required for the opponent to bear off.</param>
+        public float CalculateOneSidedWinProb(float[] onRollDist, float[] waitingDist)
         {
-            float[] probs = new float[5]; // [Win, WinG, WinBG, LoseG, LoseBG]
+            float totalWinProb = 0.0f;
+            int maxRolls = Math.Max(onRollDist.Length, waitingDist.Length);
 
-            if (pc == PositionClass.BearoffTwoSided)
+            // i represents the number of rolls it takes the "On Roll" player to finish
+            for (int i = 0; i < onRollDist.Length; i++)
             {
-                // TODO: Look up exact win probability in the TS Database.
-                // The index is usually something like: (player1Id * totalIds) + player2Id
-                // probs[0] = FetchFromTsDatabase(player1Id, player2Id);
+                if (onRollDist[i] <= 0.0f) continue;
 
-                // Placeholder:
-                probs[0] = 0.5f;
+                float opponentSlowerProb = 0.0f;
+
+                // j represents the number of rolls it takes the "Waiting" player to finish.
+                // Because Player 1 rolled first, if Player 2 takes the same number of rolls (j = i), Player 1 wins.
+                for (int j = i; j < waitingDist.Length; j++)
+                {
+                    opponentSlowerProb += waitingDist[j];
+                }
+
+                // If Player 2's distribution array is shorter than Player 1's required rolls,
+                // the opponent finishes before Player 1, meaning opponentSlowerProb remains 0.0f for this 'i'.
+
+                totalWinProb += onRollDist[i] * opponentSlowerProb;
             }
-            else if (pc == PositionClass.BearoffOneSided)
-            {
-                // TODO: Fetch the roll distributions for both players from the OS Database.
-                // Multiply the distributions to find the probability that P1 finishes before P2.
-                // probs[0] = CalculateFromOsDistributions(player1Id, player2Id);
 
-                // Placeholder:
-                probs[0] = 0.5f;
-            }
-
-            // Gammons are generally 0 in pure bearoffs unless a player hasn't borne off a single checker yet.
-            // GNUBG's SanityCheck() function usually cleans this up after the base evaluation.
-            probs[1] = 0.0f; // WinG
-            probs[2] = 0.0f; // WinBG
-            probs[3] = 0.0f; // LoseG
-            probs[4] = 0.0f; // LoseBG
-
-            return probs;
+            return Math.Clamp(totalWinProb, 0.0f, 1.0f);
         }
     }
 }
