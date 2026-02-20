@@ -14,19 +14,19 @@ namespace EngineCLI
 
             // 1. Initialize the Brains
             Console.WriteLine("Loading Engine Components...");
-            
+
             string dataDir = FindDataDirectory();
             string weightsPath = System.IO.Path.Combine(dataDir, "gnubg.weights");
-            
+
             Console.WriteLine("Parsing Neural Net weights (this takes a second)...");
             var networks = WeightParser.Load(weightsPath);
-            
+
             // FIX: Securely find the 250-input Contact Network
             NeuralNet contactNet = System.Linq.Enumerable.First(networks, n => n.InputCount == 250);
-            
-            BearoffEvaluator bearoffEval = new BearoffEvaluator(dataDir); 
+
+            BearoffEvaluator bearoffEval = new BearoffEvaluator(dataDir);
             CubeEvaluator cubeEval = new CubeEvaluator();
-            
+
             // We pass 'null' for the race net for now, so SearchEngine safely falls back 
             // to using the 250-input ContactNet for all non-bearoff evaluations.
             SearchEngine ai = new SearchEngine(contactNet, null, bearoffEval, cubeEval);
@@ -122,7 +122,7 @@ namespace EngineCLI
             for (int i = 0; i < 25; i++) totalCheckers += checkers[i];
             return totalCheckers == 0;
         }
-        
+
         private static string FindDataDirectory()
         {
             // Start at the directory where the test DLL is running

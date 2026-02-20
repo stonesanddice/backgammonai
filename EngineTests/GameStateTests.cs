@@ -14,7 +14,7 @@ namespace EngineTests
             // Assert - 25 slots (0-23 for points, 24 for the bar/off-board)
             Assert.NotNull(state.Player1Checkers);
             Assert.Equal(25, state.Player1Checkers.Length);
-            
+
             Assert.NotNull(state.Player2Checkers);
             Assert.Equal(25, state.Player2Checkers.Length);
         }

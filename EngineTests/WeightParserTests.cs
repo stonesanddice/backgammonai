@@ -41,7 +41,7 @@ namespace EngineTests
             // FIX: Dynamically find the Contact Network by its known input size!
             // We need System.Linq included at the top of the file for this.
             var contactNet = System.Linq.Enumerable.FirstOrDefault(nets, n => n.InputCount == 250);
-            
+
             Assert.NotNull(contactNet); // Will fail if it can't find the 250-input net
             Assert.Equal(128, contactNet.HiddenCount);
             Assert.Equal(5, contactNet.OutputCount);
