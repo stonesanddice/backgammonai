@@ -21,14 +21,14 @@ namespace EngineCore.Tests
 
             // FIX: To block a '1' from the bar (landing on Index 23), 
             // we must block the opponent's Index 0 (23 - 23 = 0).
-            state.Player2Checkers[0] = 2; 
+            state.Player2Checkers[0] = 2;
 
             var turns = MoveGenerator.GenerateLegalTurns(state);
 
             // Assert: They can only play the 2 from the bar. 
-            Assert.All(turns, t => Assert.Single(t.Moves)); 
-            Assert.All(turns, t => Assert.Equal(24, t.Moves[0].From)); 
-            Assert.DoesNotContain(turns, t => t.Moves.Any(m => m.From == 19)); 
+            Assert.All(turns, t => Assert.Single(t.Moves));
+            Assert.All(turns, t => Assert.Equal(24, t.Moves[0].From));
+            Assert.DoesNotContain(turns, t => t.Moves.Any(m => m.From == 19));
         }
 
         [Fact]
@@ -39,13 +39,13 @@ namespace EngineCore.Tests
                 Player1Checkers = new int[25],
                 Player2Checkers = new int[25],
                 Dice1 = 1,
-                Dice2 = 3 
+                Dice2 = 3
             };
-            
+
             // FIX: Placed on Index 9 (The 10-point). 
             // Moving a 3 will land it on the 7-point, which is still outside the home board.
-            state.Player1Checkers[9] = 1; 
-            state.Player1Checkers[0] = 1; 
+            state.Player1Checkers[9] = 1;
+            state.Player1Checkers[0] = 1;
 
             var turns = MoveGenerator.GenerateLegalTurns(state);
 
