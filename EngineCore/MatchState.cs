@@ -15,5 +15,6 @@
         public int Player0Score { get; set; }
         public int Player1Score { get; set; }
         public bool JacobyRule { get; set; } 
+        public bool BeaversAllowed { get; set; }
     }
 }
