@@ -13,30 +13,30 @@ namespace EngineTests
         public void Parse_StartingPosition_CreatesCorrectBoardState()
         {
             // Arrange & Act
-            // Assuming Parse returns your GameState or GnuBgPosition object
             GameState state = PositionId.Decode(StartingPositionId);
 
             // Assert
             // In GNUBG, the board is encoded from the perspective of the player on roll.
-            // Player 0 is the player whose turn it is.
+            // In our engine, Player 0 (On Roll) is mapped to Player2Checkers.
+            // Remember: Point N corresponds to Array Index N - 1.
 
-            // Assert Player 0's checker counts
-            Assert.Equal(5, state.GetCheckers(player: 0, point: 6));
-            Assert.Equal(3, state.GetCheckers(player: 0, point: 8));
-            Assert.Equal(5, state.GetCheckers(player: 0, point: 13));
-            Assert.Equal(2, state.GetCheckers(player: 0, point: 24));
+            // Assert Player 0's checker counts (state.Player2Checkers)
+            Assert.Equal(5, state.Player2Checkers[5]);  // 6-point
+            Assert.Equal(3, state.Player2Checkers[7]);  // 8-point
+            Assert.Equal(5, state.Player2Checkers[12]); // 13-point
+            Assert.Equal(2, state.Player2Checkers[23]); // 24-point
 
-            // Verify the bar and off-board are empty for the starting position
-            Assert.Equal(0, state.GetCheckersOnBar(player: 0));
-            Assert.Equal(0, state.GetCheckersOffBoard(player: 0));
+            // Verify the bar (Index 24) is empty
+            Assert.Equal(0, state.Player2Checkers[24]);
 
-            // Assert Player 1's checker counts (Opponent)
-            // Depending on your implementation, this might be accessed via a 2D array 
-            // or by looking at the same points from the opponent's perspective.
-            Assert.Equal(5, state.GetCheckers(player: 1, point: 6));
-            Assert.Equal(3, state.GetCheckers(player: 1, point: 8));
-            Assert.Equal(5, state.GetCheckers(player: 1, point: 13));
-            Assert.Equal(2, state.GetCheckers(player: 1, point: 24));
+            // Assert Player 1's checker counts (state.Player1Checkers)
+            Assert.Equal(5, state.Player1Checkers[5]);  // 6-point
+            Assert.Equal(3, state.Player1Checkers[7]);  // 8-point
+            Assert.Equal(5, state.Player1Checkers[12]); // 13-point
+            Assert.Equal(2, state.Player1Checkers[23]); // 24-point
+
+            // Verify the opponent's bar is empty
+            Assert.Equal(0, state.Player1Checkers[24]);
         }
 
         [Theory]
