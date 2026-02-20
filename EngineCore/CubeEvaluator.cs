@@ -20,7 +20,7 @@ namespace EngineCore
         TooGoodToDouble,
         TooGoodToDoublePass
     }
-    
+
     public enum CubeResponse
     {
         Pass,
@@ -28,12 +28,12 @@ namespace EngineCore
         Beaver,
         Raccoon
     }
-    
+
     public class CubeEvaluator
     {
         // Equivalent to rContactX in eval.c - Cube efficiency for standard contact positions.
-        private const float DefaultCubeEfficiency = 0.68f; 
-        
+        private const float DefaultCubeEfficiency = 0.68f;
+
         // Epsilon to avoid divide-by-zero errors (used in GNUBG's Cl2CfMoney)
         private const float Epsilon = 0.0000001f;
         private const float OmEpsilon = 0.9999999f;
@@ -45,8 +45,8 @@ namespace EngineCore
         {
             // Note: Gammon values are 1.0 for money play.
             // Formula: Win*2 - 1 + (WinG - LoseG) + (WinBG - LoseBG)
-            return (p.Win * 2.0f - 1.0f) + 
-                   (p.WinGammon - p.LoseGammon) + 
+            return (p.Win * 2.0f - 1.0f) +
+                   (p.WinGammon - p.LoseGammon) +
                    (p.WinBackgammon - p.LoseBackgammon);
         }
 
@@ -58,8 +58,8 @@ namespace EngineCore
             // Under the Jacoby rule, gammons don't count if the cube is centered.
             float gammonPrice = (match.JacobyRule && match.CubeOwner == -1) ? 0.0f : 1.0f;
 
-            return (p.Win * 2.0f - 1.0f) + 
-                   ((p.WinGammon - p.LoseGammon) * gammonPrice) + 
+            return (p.Win * 2.0f - 1.0f) +
+                   ((p.WinGammon - p.LoseGammon) * gammonPrice) +
                    ((p.WinBackgammon - p.LoseBackgammon) * gammonPrice);
         }
 
@@ -77,7 +77,7 @@ namespace EngineCore
                     return match.JacobyRule ? -1.0f : (-rL + (-1.0f + rL) * winProb / rTP);
                 if (winProb < rCP)
                     return -1.0f + 2.0f * (winProb - rTP) / (rCP - rTP);
-                
+
                 return match.JacobyRule ? 1.0f : (+1.0f + (rW - 1.0f) * (winProb - rCP) / (1.0f - rCP));
             }
             else if (match.CubeOwner == match.PlayerOnRoll) // Owned cube
@@ -86,7 +86,7 @@ namespace EngineCore
 
                 if (winProb < rCP)
                     return -rL + (1.0f + rL) * winProb / rCP;
-                
+
                 return +1.0f + (rW - 1.0f) * (winProb - rCP) / (1.0f - rCP);
             }
             else // Unavailable cube (Opponent owns it)
@@ -95,7 +95,7 @@ namespace EngineCore
 
                 if (winProb < rTP)
                     return -rL + (-1.0f + rL) * winProb / rTP;
-                
+
                 return -1.0f + (rW + 1.0f) * (winProb - rTP) / (1.0f - rTP);
             }
         }
@@ -122,7 +122,7 @@ namespace EngineCore
 
             return rEqDead * (1.0f - cubeEfficiency) + rEqLive * cubeEfficiency;
         }
-        
+
         /// <summary>
         /// Ported from GNUBG's `FindBestCubeDecision`.
         /// </summary>
@@ -145,7 +145,7 @@ namespace EngineCore
                         return CubeAction.TooGoodToDoublePass; // ND > DT > DP
                     if (eqNoDouble > eqDoublePass)
                         return CubeAction.TooGoodToDouble;     // ND > DP > DT
-                    
+
                     return CubeAction.NoDouble;                // DP > ND > DT
                 }
                 else
@@ -154,7 +154,7 @@ namespace EngineCore
                 }
             }
         }
-        
+
         /// <summary>
         /// Ported from GNUBG's `FindBestCubeDecision`.
         /// </summary>
@@ -176,7 +176,7 @@ namespace EngineCore
                     if (eqDoubleTake > eqDoublePass)
                     {
                         // ND > DT > DP
-                        return canWinGammon ? CubeAction.TooGoodToDoublePass : CubeAction.DoublePass; 
+                        return canWinGammon ? CubeAction.TooGoodToDoublePass : CubeAction.DoublePass;
                     }
                     else if (eqNoDouble > eqDoublePass)
                     {
@@ -186,7 +186,7 @@ namespace EngineCore
                     else
                     {
                         // DP > ND > DT
-                        return CubeAction.NoDouble; 
+                        return CubeAction.NoDouble;
                     }
                 }
                 else
@@ -196,7 +196,7 @@ namespace EngineCore
                 }
             }
         }
-        
+
         /// <summary>
         /// Converts the 5 cumulative network probabilities into Cubeless Match Winning Chance (MWC).
         /// Replaces GNUBG's Utility() for Match Play.
@@ -232,10 +232,10 @@ namespace EngineCore
         /// </summary>
         public bool IsCubeLiveInMatch(int playerAway, int oppAway, int cubeValue, bool isCrawfordGame)
         {
-            if (isCrawfordGame) 
+            if (isCrawfordGame)
                 return false; // Doubling is illegal in Crawford
 
-            if (playerAway <= cubeValue && oppAway <= cubeValue) 
+            if (playerAway <= cubeValue && oppAway <= cubeValue)
                 return false; // Cube is dead (winning the current game wins the match for either player)
 
             return true;
@@ -245,11 +245,11 @@ namespace EngineCore
         /// Ported from GNUBG's FindBestCubeDecision for Match Play.
         /// The logic tree is identical to Money play, but operates strictly on MWC floats (0.0 to 1.0).
         /// </summary>
-        public CubeAction GetMatchCubeAction(float mwcNoDouble, float mwcDoubleTake, float mwcDoublePass, 
+        public CubeAction GetMatchCubeAction(float mwcNoDouble, float mwcDoubleTake, float mwcDoublePass,
                                              bool canWinGammon, bool isCubeLive)
         {
             // If the rules or score dictate the cube cannot be turned, return NoDouble.
-            if (!isCubeLive) 
+            if (!isCubeLive)
                 return CubeAction.NoDouble;
 
             // 1. Is Double/Take and Double/Pass better than No Double?
@@ -265,11 +265,11 @@ namespace EngineCore
                 if (mwcNoDouble > mwcDoubleTake)
                 {
                     if (mwcDoubleTake > mwcDoublePass)
-                        return canWinGammon ? CubeAction.TooGoodToDoublePass : CubeAction.DoublePass; 
+                        return canWinGammon ? CubeAction.TooGoodToDoublePass : CubeAction.DoublePass;
                     else if (mwcNoDouble > mwcDoublePass)
                         return canWinGammon ? CubeAction.TooGoodToDouble : CubeAction.NoDouble;
                     else
-                        return CubeAction.NoDouble; 
+                        return CubeAction.NoDouble;
                 }
                 else
                 {
@@ -277,7 +277,7 @@ namespace EngineCore
                 }
             }
         }
-        
+
         /// <summary>
         /// Ported from GNUBG's `Cl2CfMatch`.
         /// Determines which cubeful match formula to use based on cube ownership.
@@ -327,7 +327,7 @@ namespace EngineCore
             // To get Cash Point (rTG) and Opponent Cash Point (rOppTG), we need the Take Points at the *doubled* cube.
             float mwcTakeWin = MatchEquityTable.GetMwcIfWon(playerAway, oppAway, cubeValue * 2, 1);
             float mwcTakeLose = MatchEquityTable.GetMwcIfLost(playerAway, oppAway, cubeValue * 2, 1);
-            
+
             float rOppTP = (mwcTakeWin - rMWCCash) / (mwcTakeWin - mwcTakeLose);
             float rTG = 1.0f - rOppTP; // Our Cash Point
 
@@ -379,14 +379,14 @@ namespace EngineCore
                             rBG1 * MatchEquityTable.GetMwcIfLost(playerAway, oppAway, cubeValue, 3);
 
             float rMWCCash = MatchEquityTable.GetMwcIfWon(playerAway, oppAway, cubeValue, 1);
-            
+
             float mwcTakeWin = MatchEquityTable.GetMwcIfWon(playerAway, oppAway, cubeValue * 2, 1);
             float mwcTakeLose = MatchEquityTable.GetMwcIfLost(playerAway, oppAway, cubeValue * 2, 1);
             float rOppTP = (mwcTakeWin - rMWCCash) / (mwcTakeWin - mwcTakeLose);
-            float rTG = 1.0f - rOppTP; 
+            float rTG = 1.0f - rOppTP;
 
             float rMWCLive;
-            if (p.Win <= rTG) 
+            if (p.Win <= rTG)
             {
                 rMWCLive = mwcLose + (rMWCCash - mwcLose) * p.Win / rTG;
             }
@@ -432,7 +432,7 @@ namespace EngineCore
             {
                 rMWCLive = mwcLose + (rMWCOppCash - mwcLose) * p.Win / rOppTG;
             }
-            else 
+            else
             {
                 rMWCLive = rMWCOppCash + (mwcWin - rMWCOppCash) * (p.Win - rOppTG) / (1.0f - rOppTG);
             }

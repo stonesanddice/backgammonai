@@ -15,10 +15,10 @@ namespace EngineTests
             MatchState state = MatchId.Decode(StandardMoneyGameId);
 
             Assert.Equal(1, state.Cube);
-            Assert.Equal(-1, state.CubeOwner); 
+            Assert.Equal(-1, state.CubeOwner);
             Assert.Equal(0, state.PlayerOnRoll); // Back to 0!
             Assert.False(state.IsCrawford);
-            Assert.Equal(0, state.MatchLength); 
+            Assert.Equal(0, state.MatchLength);
             Assert.Equal(0, state.Player0Score);
             Assert.Equal(0, state.Player1Score);
             Assert.Equal(0, state.Dice[0]);

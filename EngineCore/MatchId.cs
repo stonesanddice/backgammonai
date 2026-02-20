@@ -61,7 +61,7 @@ namespace EngineCore
             MatchState state = new MatchState();
 
             state.Cube = 1 << GetBits(auchKey, 0, 4);
-            
+
             state.CubeOwner = GetBits(auchKey, 4, 2);
             if (state.CubeOwner != 0 && state.CubeOwner != 1) state.CubeOwner = -1; // -1 is centered
 

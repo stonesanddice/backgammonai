@@ -104,7 +104,7 @@ namespace EngineCore
                         if (player >= 2 || point >= 25)
                         {
                             // GNUBG error guard: string is malformed
-                            return state; 
+                            return state;
                         }
                         state.Board[player, point]++;
                     }
@@ -156,7 +156,7 @@ namespace EngineCore
             if (ch >= '0' && ch <= '9') return (byte)(ch - '0' + 52);
             if (ch == '+') return 62;
             if (ch == '/') return 63;
-    
+
             // Throw standard FormatException to satisfy our tests for invalid characters
             throw new FormatException($"Invalid Base64 character encountered: {ch}");
         }

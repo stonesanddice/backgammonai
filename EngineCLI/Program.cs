@@ -8,7 +8,7 @@ namespace EngineCLI
         static void Main(string[] args)
         {
             CubeEvaluator cubeEval = new CubeEvaluator();
-            
+
             // We'll use the same "Borderline Advantage" probabilities
             // Win: 72%, WinG: 10%, WinBG: 1% | Lose: 28%, LoseG: 10%, LoseBG: 1%
             Probabilities probs = new Probabilities(0.72f, 0.10f, 0.01f, 0.10f, 0.01f);
@@ -16,17 +16,17 @@ namespace EngineCLI
             // Three wildly different match scenarios
             var testCases = new[]
             {
-                new { 
-                    Name = "Early Match (4-away / 4-away)", 
-                    PlayerAway = 4, OppAway = 4, Crawford = false 
+                new {
+                    Name = "Early Match (4-away / 4-away)",
+                    PlayerAway = 4, OppAway = 4, Crawford = false
                 },
-                new { 
-                    Name = "2-away / 2-away (The 2-away trick)", 
-                    PlayerAway = 2, OppAway = 2, Crawford = false 
+                new {
+                    Name = "2-away / 2-away (The 2-away trick)",
+                    PlayerAway = 2, OppAway = 2, Crawford = false
                 },
-                new { 
-                    Name = "Crawford Game (1-away / 3-away)", 
-                    PlayerAway = 1, OppAway = 3, Crawford = true 
+                new {
+                    Name = "Crawford Game (1-away / 3-away)",
+                    PlayerAway = 1, OppAway = 3, Crawford = true
                 }
             };
 
@@ -40,7 +40,7 @@ namespace EngineCLI
                 int centeredCubeOwner = -1; // -1 = centered
                 int opponentCubeOwner = 1;  // 1 = opponent owns it
                 bool canWinGammon = probs.WinGammon > 0.0f;
-                
+
                 // Check if the rules even allow a double
                 bool isLive = cubeEval.IsCubeLiveInMatch(test.PlayerAway, test.OppAway, currentCube, test.Crawford);
 
@@ -65,7 +65,7 @@ namespace EngineCLI
                 Console.WriteLine($"   No Double    : {mwcNoDouble:P2}");
                 Console.WriteLine($"   Double / Take: {mwcDoubleTake:P2}");
                 Console.WriteLine($"   Double / Pass: {mwcDoublePass:P2}");
-                
+
                 Console.WriteLine($"\n -> RECOMMENDED ACTION: {action}");
                 Console.WriteLine("==================================================\n");
             }

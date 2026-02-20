@@ -12,9 +12,9 @@ namespace EngineCore
         private readonly BoardClassifier _classifier;
 
         public SearchEngine(
-            NeuralNet contactNet, 
+            NeuralNet contactNet,
             NeuralNet raceNet = null,
-            BearoffEvaluator bearoffEval = null, 
+            BearoffEvaluator bearoffEval = null,
             CubeEvaluator cubeEval = null)
         {
             _contactNet = contactNet;
@@ -31,7 +31,7 @@ namespace EngineCore
 
             Turn? bestTurn = null;
             float bestScore = float.MinValue;
-            
+
             foreach (var turn in legalTurns)
             {
                 if (turn.ResultingState == null) continue;
@@ -55,32 +55,32 @@ namespace EngineCore
                     // If you have a dedicated race net, use it. Otherwise, GNUBG falls back to contact/race logic.
                     // float[] features = FeatureEncoder.EncodeRace(onRoll, waiting);
                     // p2Probs = _raceNet.Evaluate(features);
-                    
+
                     // Fallback to contact net for now if Race net isn't wired up
                     float[] features = FeatureEncoder.EncodeContact(onRoll, waiting);
-                    p2Probs = _contactNet.Evaluate(features); 
+                    p2Probs = _contactNet.Evaluate(features);
                 }
                 else // It's a Bearoff!
                 {
                     uint id1 = _classifier.GetPositionBearoff(onRoll);
                     uint id2 = _classifier.GetPositionBearoff(waiting);
-                    
+
                     // The bearoff database gives us EXACT mathematical win probabilities!
                     p2Probs = _bearoffEval.Evaluate(id1, id2, pc);
                 }
 
                 // 3. Invert Player 2's probabilities to get Player 1's perspective
                 Probabilities p1Probs = new Probabilities(
-                    Win: 1.0f - p2Probs[0],             
-                    WinGammon: p2Probs[3],              
-                    WinBackgammon: p2Probs[4],          
-                    LoseGammon: p2Probs[1],             
-                    LoseBackgammon: p2Probs[2]          
+                    Win: 1.0f - p2Probs[0],
+                    WinGammon: p2Probs[3],
+                    WinBackgammon: p2Probs[4],
+                    LoseGammon: p2Probs[1],
+                    LoseBackgammon: p2Probs[2]
                 );
 
                 // 4. Calculate Cubeful Equity
                 float score;
-                bool isMoneyGame = match.MatchLength == 0 || match.MatchLength == 9999; 
+                bool isMoneyGame = match.MatchLength == 0 || match.MatchLength == 9999;
 
                 if (isMoneyGame)
                 {

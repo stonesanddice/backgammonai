@@ -14,14 +14,14 @@ public class BoardClassifier
         int nBack = GetFurthestBack(state.Player2Checkers);
 
         // 1. Over: Game is finished if a player has no checkers.
-        if (nBack < 0 || nOppBack < 0) 
+        if (nBack < 0 || nOppBack < 0)
             return PositionClass.Over;
 
         // 2. Contact vs. Non-Contact:
         // If back checkers have passed (sum <= 22), contact is impossible.
         if (nBack + nOppBack > 22)
         {
-            const int N = 6; 
+            const int N = 6;
             // Check if either side is "Crashed" within a contact position.
             if (IsCrashed(state.Player1Checkers, N) || IsCrashed(state.Player2Checkers, N))
             {
@@ -30,15 +30,15 @@ public class BoardClassifier
 
             return PositionClass.Contact;
         }
-        
+
         // 3. Race vs. Bearoff:
         // If any checker is outside the home board (index > 5), it is a Race.
-        if (nBack > 5 || nOppBack > 5) 
+        if (nBack > 5 || nOppBack > 5)
             return PositionClass.Race;
 
         // 4. Bearoff classification:
         // Uses the enumeration threshold (923) from eval.c to decide DB type.
-        if (GetPositionBearoff(state.Player1Checkers) > 923 || 
+        if (GetPositionBearoff(state.Player1Checkers) > 923 ||
             GetPositionBearoff(state.Player2Checkers) > 923)
         {
             return PositionClass.BearoffOneSided;
@@ -86,7 +86,8 @@ public class BoardClassifier
 
         fBits = 1u << (int)j;
 
-        for (int i = 0; i < (int)nPoints - 1; i++) {
+        for (int i = 0; i < (int)nPoints - 1; i++)
+        {
             j -= (uint)playerBoard[i] + 1;
             fBits |= (1u << (int)j);
         }

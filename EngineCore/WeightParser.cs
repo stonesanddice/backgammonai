@@ -14,7 +14,7 @@ namespace EngineCore
 
             string fileContent = File.ReadAllText(filePath);
             string[] tokens = fileContent.Split(new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            
+
             int tokenIndex = 0;
             List<NeuralNet> nets = new List<NeuralNet>();
 
@@ -34,7 +34,7 @@ namespace EngineCore
                 index++;
             }
 
-            if (index >= tokens.Length) 
+            if (index >= tokens.Length)
                 throw new EndOfStreamException("Reached end of tokens while searching for a network.");
 
             // 1. Read Header

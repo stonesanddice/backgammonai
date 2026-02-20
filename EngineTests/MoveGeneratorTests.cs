@@ -20,10 +20,10 @@ namespace EngineCore.Tests
             };
             state.Player1Checkers[24] = 1; // Bar
             state.Player1Checkers[19] = 1; // 20-point
-            
+
             // Block the 1-point (their destination from bar with a 1)
             // Note: Opponent point 22 is player 1's 1-point (23-1=22)
-            state.Player2Checkers[22] = 2; 
+            state.Player2Checkers[22] = 2;
 
             // Act
             var turns = MoveGenerator.GenerateLegalTurns(state);

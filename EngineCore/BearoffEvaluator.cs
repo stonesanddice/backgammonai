@@ -26,9 +26,9 @@ namespace EngineCore
                 // TODO: Look up exact win probability in the TS Database.
                 // The index is usually something like: (player1Id * totalIds) + player2Id
                 // probs[0] = FetchFromTsDatabase(player1Id, player2Id);
-                
+
                 // Placeholder:
-                probs[0] = 0.5f; 
+                probs[0] = 0.5f;
             }
             else if (pc == PositionClass.BearoffOneSided)
             {

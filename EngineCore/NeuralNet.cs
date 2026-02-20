@@ -63,9 +63,9 @@ namespace EngineCore
                 {
                     sum += hiddenLayer[j] * OutputWeights[j, i];
                 }
-                
-                LastLogits[i] = sum; 
-                outputs[i] = Sigmoid(sum, BetaOutput); 
+
+                LastLogits[i] = sum;
+                outputs[i] = Sigmoid(sum, BetaOutput);
             }
 
             return outputs;

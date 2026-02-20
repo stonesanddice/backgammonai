@@ -49,7 +49,7 @@ namespace EngineCLI
             int p1Bar = state.Board[1, 24];
             int p0Off = GetCheckersOffBoard(state, 0);
             int p1Off = GetCheckersOffBoard(state, 1);
-            
+
             Console.WriteLine($"  Player 0 (O):  On Bar: {p0Bar,2}  |  Borne Off: {p0Off,2}");
             Console.WriteLine($"  Player 1 (X):  On Bar: {p1Bar,2}  |  Borne Off: {p1Off,2}");
             Console.WriteLine();
@@ -78,7 +78,7 @@ namespace EngineCLI
         private static int GetCheckersOffBoard(GameState state, int player)
         {
             int totalOnBoardAndBar = 0;
-            for (int i = 0; i <= 24; i++) 
+            for (int i = 0; i <= 24; i++)
             {
                 totalOnBoardAndBar += state.Board[player, i];
             }

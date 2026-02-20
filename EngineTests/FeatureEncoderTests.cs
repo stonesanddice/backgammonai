@@ -29,7 +29,7 @@ namespace EngineCore.Tests
             // Testing the logic used in the private EncodeBase via the public EncodeContact
             // Offset 100 is where "onRoll" base features start.
             // Each point has 4 floats: [1, 2, 3+, (n-3)/2]
-            
+
             int[] onRoll = new int[25];
             onRoll[0] = 1; // 1 checker on point 0
             onRoll[1] = 2; // 2 checkers on point 1
@@ -76,10 +76,10 @@ namespace EngineCore.Tests
         {
             int[] onRoll = new int[25];
             // Place remaining checkers on the 1-point (index 0)
-            onRoll[0] = 15 - menOff; 
+            onRoll[0] = 15 - menOff;
 
             int[] waiting = new int[25];
-    
+
             float[] result = FeatureEncoder.EncodeContact(onRoll, waiting);
 
             // Offset 200 is OFF1 for onRoll
