@@ -13,23 +13,20 @@ namespace EngineTests
 
         private static string FindDataDirectory()
         {
-            // Start at the directory where the test DLL is running
-            var currentDir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
-
-            // Search upward until we find a directory containing the "Data" folder
+            var currentDir = new DirectoryInfo(AppContext.BaseDirectory);
             while (currentDir != null)
             {
-                string potentialDataDir = System.IO.Path.Combine(currentDir.FullName, "Data");
-                // Check if the directory exists AND contains our specific file
-                if (System.IO.Directory.Exists(potentialDataDir) &&
-                    System.IO.File.Exists(System.IO.Path.Combine(potentialDataDir, "gnubg_ts0.bd")))
-                {
-                    return potentialDataDir;
-                }
-                currentDir = currentDir.Parent; // Move up one folder
-            }
+                // 1. Check the new nested Unity Package path
+                string packageData = Path.Combine(currentDir.FullName, "com.stonesandice.backgammonai", "Runtime", "Data");
+                if (Directory.Exists(packageData)) return packageData;
 
-            throw new System.IO.DirectoryNotFoundException("Could not find the 'Data' directory containing gnubg_ts0.bd.");
+                // 2. Check the old root path (for GitHub Actions/Local fallbacks)
+                string rootData = Path.Combine(currentDir.FullName, "Data");
+                if (Directory.Exists(rootData)) return rootData;
+
+                currentDir = currentDir.Parent;
+            }
+            throw new DirectoryNotFoundException("Could not find the Data directory in any parent folders.");
         }
 
         [Fact]

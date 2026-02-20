@@ -26,7 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EngineCore\EngineCore.csproj" />
+    <ProjectReference Include="..\..\..\Runtime\Scripts\EngineCore\EngineCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

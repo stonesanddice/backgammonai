@@ -15,14 +15,21 @@ namespace EngineCLI
             // 1. Initialize the Brains
             Console.WriteLine("Loading Engine Components...");
 
-            // NOTE: We are passing a dummy NeuralNet for now until you parse gnubg.weights
-            NeuralNet dummyNet = new NeuralNet(inputs: 250, hidden: 128, outputs: 5, trainedIters: 0, betaH: 1f, betaO: 1f);
+            string dataDir = FindDataDirectory();
+            string weightsPath = System.IO.Path.Combine(dataDir, "gnubg.weights");
 
-            string dataDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\Data"));
-            BearoffEvaluator bearoffEval = new BearoffEvaluator(dataDir); // Will load the TS database perfectly!
+            Console.WriteLine("Parsing Neural Net weights (this takes a second)...");
+            var networks = WeightParser.Load(weightsPath);
+
+            // FIX: Securely find the 250-input Contact Network
+            NeuralNet contactNet = System.Linq.Enumerable.First(networks, n => n.InputCount == 250);
+
+            BearoffEvaluator bearoffEval = new BearoffEvaluator(dataDir);
             CubeEvaluator cubeEval = new CubeEvaluator();
 
-            SearchEngine ai = new SearchEngine(dummyNet, null, bearoffEval, cubeEval);
+            // We pass 'null' for the race net for now, so SearchEngine safely falls back 
+            // to using the 250-input ContactNet for all non-bearoff evaluations.
+            SearchEngine ai = new SearchEngine(contactNet, null, bearoffEval, cubeEval);
             Console.WriteLine("Engine Ready!\n");
 
             // 2. Setup the Match and Board
@@ -45,20 +52,50 @@ namespace EngineCLI
                 state.Dice1 = rng.Next(1, 7);
                 state.Dice2 = rng.Next(1, 7);
 
-                // Draw the board!
                 BoardVisualizer.PrintBoard(state, match);
 
-                // Ask the AI for the best move (Using 1-ply. Change to 2-ply once weights are loaded!)
-                Turn? bestTurn = ai.GetBestTurn(state, match, depth: 1);
+                if (state.PlayerOnRoll == 0) // YOUR TURN
+                {
+                    List<Turn> legalTurns = MoveGenerator.GenerateLegalTurns(state);
 
-                if (bestTurn == null || bestTurn.Moves.Count == 0)
-                {
-                    Console.WriteLine(">> AI Dances! (No legal moves)\n");
+                    if (legalTurns.Count == 0)
+                    {
+                        Console.WriteLine(">> You have no legal moves. You dance!");
+                    }
+                    else
+                    {
+                        bool validMoveEntered = false;
+                        while (!validMoveEntered)
+                        {
+                            Console.WriteLine($">> YOUR TURN! Dice: {state.Dice1}-{state.Dice2}");
+                            Console.Write("Enter move (e.g., '24/20 13/9'): ");
+                            string? input = Console.ReadLine();
+
+                            Turn? humanTurn = InputParser.ParseHumanTurn(input ?? "", state);
+
+                            // Check if the move you typed is actually allowed by the rules
+                            if (humanTurn != null && legalTurns.Any(t => t.ToString() == humanTurn.ToString()))
+                            {
+                                state = MoveGenerator.ApplyTurn(state, humanTurn);
+                                validMoveEntered = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine("!! ILLEGAL MOVE !! Try again. (Example format: 24/20 13/9)");
+                            }
+                        }
+                    }
                 }
-                else
+                else // AI TURN
                 {
-                    Console.WriteLine($">> AI Plays: {bestTurn}\n");
-                    state = bestTurn.ResultingState;
+                    Console.WriteLine($">> AI is thinking (2-ply)...");
+                    Turn? bestTurn = ai.GetBestTurn(state, match, depth: 2);
+
+                    if (bestTurn != null)
+                    {
+                        Console.WriteLine($">> AI Plays: {bestTurn}");
+                        state = bestTurn.ResultingState!;
+                    }
                 }
 
                 // Check for Game Over 
@@ -114,6 +151,27 @@ namespace EngineCLI
             int totalCheckers = 0;
             for (int i = 0; i < 25; i++) totalCheckers += checkers[i];
             return totalCheckers == 0;
+        }
+
+        private static string FindDataDirectory()
+        {
+            // Start at the directory where the test DLL is running
+            var currentDir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+
+            // Search upward until we find a directory containing the "Data" folder
+            while (currentDir != null)
+            {
+                string potentialDataDir = System.IO.Path.Combine(currentDir.FullName, "Data");
+                // Check if the directory exists AND contains our specific file
+                if (System.IO.Directory.Exists(potentialDataDir) &&
+                    System.IO.File.Exists(System.IO.Path.Combine(potentialDataDir, "gnubg_ts0.bd")))
+                {
+                    return potentialDataDir;
+                }
+                currentDir = currentDir.Parent; // Move up one folder
+            }
+
+            throw new System.IO.DirectoryNotFoundException("Could not find the 'Data' directory containing gnubg_ts0.bd.");
         }
     }
 }

@@ -1,7 +1,0 @@
-﻿{
-  "name": "com.stonesandice.backgammon-engine",
-  "version": "1.0.0",
-  "displayName": "Backgammon Core Engine",
-  "description": "A native C# Backgammon move generator and AI evaluator.",
-  "unity": "2026.3"
-}

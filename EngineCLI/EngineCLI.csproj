@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\com.stonesandice.backgammonai\Runtime\Scripts\EngineCore\EngineCore.csproj" />
     <ProjectReference Include="..\EngineCore\EngineCore.csproj" />
   </ItemGroup>
 

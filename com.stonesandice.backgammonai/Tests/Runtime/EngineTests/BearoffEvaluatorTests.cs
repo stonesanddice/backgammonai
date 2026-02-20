@@ -8,7 +8,25 @@ namespace EngineCore.Tests
     public class BearoffEvaluatorTests
     {
         // FIX: Dynamically path up from the bin/Debug/net7.0/ directory back to the root Data folder!
-        private readonly string _dataDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"../../../../Data"));
+        private readonly string _dataDir = FindDataDirectory();
+
+        private static string FindDataDirectory()
+        {
+            var currentDir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+            while (currentDir != null)
+            {
+                // Look for the specific UPM package data path
+                string potential = System.IO.Path.Combine(currentDir.FullName, "com.stonesandice.backgammonai", "Runtime", "Data");
+                if (System.IO.Directory.Exists(potential)) return potential;
+
+                // Fallback for standard root Data folder
+                string rootData = System.IO.Path.Combine(currentDir.FullName, "Data");
+                if (System.IO.Directory.Exists(rootData)) return rootData;
+
+                currentDir = currentDir.Parent;
+            }
+            throw new System.IO.DirectoryNotFoundException("Data folder not found in any parent directories.");
+        }
 
         [Fact]
         public void Evaluate_ValidTwoSidedPosition_ReturnsCorrectWinProbability()
