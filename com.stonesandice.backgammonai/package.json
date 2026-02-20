@@ -1,0 +1,16 @@
+﻿{
+  "name": "com.stonesandice.backgammon-engine",
+  "version": "1.0.0",
+  "displayName": "Backgammon Grandmaster AI",
+  "description": "A world-class Backgammon engine using neural networks and 2-ply search.",
+  "unity": "2021.3",
+  "author": {
+    "name": "David Reay",
+    "email": "david@stonesandice.com"
+  },
+  "keywords": [
+    "ai",
+    "backgammon",
+    "engine"
+  ]
+}

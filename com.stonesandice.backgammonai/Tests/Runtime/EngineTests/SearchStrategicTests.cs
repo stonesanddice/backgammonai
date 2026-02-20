@@ -65,11 +65,17 @@ namespace EngineTests
             var currentDir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
             while (currentDir != null)
             {
-                string potential = System.IO.Path.Combine(currentDir.FullName, "Data");
+                // Look for the specific UPM package data path
+                string potential = System.IO.Path.Combine(currentDir.FullName, "com.stonesandice.backgammonai", "Runtime", "Data");
                 if (System.IO.Directory.Exists(potential)) return potential;
+        
+                // Fallback for standard root Data folder
+                string rootData = System.IO.Path.Combine(currentDir.FullName, "Data");
+                if (System.IO.Directory.Exists(rootData)) return rootData;
+
                 currentDir = currentDir.Parent;
             }
-            throw new System.IO.DirectoryNotFoundException("Data folder not found.");
+            throw new System.IO.DirectoryNotFoundException("Data folder not found in any parent directories.");
         }
     }
 }

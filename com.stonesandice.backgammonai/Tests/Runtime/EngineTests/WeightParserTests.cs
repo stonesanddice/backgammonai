@@ -15,17 +15,20 @@ namespace EngineTests
 
         private static string FindDataDirectory()
         {
-            var currentDir = new DirectoryInfo(System.AppContext.BaseDirectory);
+            var currentDir = new DirectoryInfo(AppContext.BaseDirectory);
             while (currentDir != null)
             {
-                string potential = Path.Combine(currentDir.FullName, "Data");
-                if (Directory.Exists(potential) && File.Exists(Path.Combine(potential, "gnubg.weights")))
-                {
-                    return potential;
-                }
+                // 1. Check the new nested Unity Package path
+                string packageData = Path.Combine(currentDir.FullName, "com.stonesandice.backgammonai", "Runtime", "Data");
+                if (Directory.Exists(packageData)) return packageData;
+
+                // 2. Check the old root path (for GitHub Actions/Local fallbacks)
+                string rootData = Path.Combine(currentDir.FullName, "Data");
+                if (Directory.Exists(rootData)) return rootData;
+
                 currentDir = currentDir.Parent;
             }
-            throw new DirectoryNotFoundException("Could not find Data folder containing gnubg.weights");
+            throw new DirectoryNotFoundException("Could not find the Data directory in any parent folders.");
         }
 
         [Fact]
