@@ -14,15 +14,22 @@ namespace EngineCLI
 
             // 1. Initialize the Brains
             Console.WriteLine("Loading Engine Components...");
-
-            // NOTE: We are passing a dummy NeuralNet for now until you parse gnubg.weights
-            NeuralNet dummyNet = new NeuralNet(inputs: 250, hidden: 128, outputs: 5, trainedIters: 0, betaH: 1f, betaO: 1f);
-
-            string dataDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\Data"));
-            BearoffEvaluator bearoffEval = new BearoffEvaluator(dataDir); // Will load the TS database perfectly!
+            
+            string dataDir = FindDataDirectory();
+            string weightsPath = System.IO.Path.Combine(dataDir, "gnubg.weights");
+            
+            Console.WriteLine("Parsing Neural Net weights (this takes a second)...");
+            var networks = WeightParser.Load(weightsPath);
+            
+            // FIX: Securely find the 250-input Contact Network
+            NeuralNet contactNet = System.Linq.Enumerable.First(networks, n => n.InputCount == 250);
+            
+            BearoffEvaluator bearoffEval = new BearoffEvaluator(dataDir); 
             CubeEvaluator cubeEval = new CubeEvaluator();
-
-            SearchEngine ai = new SearchEngine(dummyNet, null, bearoffEval, cubeEval);
+            
+            // We pass 'null' for the race net for now, so SearchEngine safely falls back 
+            // to using the 250-input ContactNet for all non-bearoff evaluations.
+            SearchEngine ai = new SearchEngine(contactNet, null, bearoffEval, cubeEval);
             Console.WriteLine("Engine Ready!\n");
 
             // 2. Setup the Match and Board
@@ -114,6 +121,27 @@ namespace EngineCLI
             int totalCheckers = 0;
             for (int i = 0; i < 25; i++) totalCheckers += checkers[i];
             return totalCheckers == 0;
+        }
+        
+        private static string FindDataDirectory()
+        {
+            // Start at the directory where the test DLL is running
+            var currentDir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+
+            // Search upward until we find a directory containing the "Data" folder
+            while (currentDir != null)
+            {
+                string potentialDataDir = System.IO.Path.Combine(currentDir.FullName, "Data");
+                // Check if the directory exists AND contains our specific file
+                if (System.IO.Directory.Exists(potentialDataDir) &&
+                    System.IO.File.Exists(System.IO.Path.Combine(potentialDataDir, "gnubg_ts0.bd")))
+                {
+                    return potentialDataDir;
+                }
+                currentDir = currentDir.Parent; // Move up one folder
+            }
+
+            throw new System.IO.DirectoryNotFoundException("Could not find the 'Data' directory containing gnubg_ts0.bd.");
         }
     }
 }
