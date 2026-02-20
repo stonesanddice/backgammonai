@@ -8,7 +8,29 @@ namespace EngineTests
         private readonly BoardClassifier _classifier = new();
 
         // Ensure this path maps back to your root Data folder from the bin output directory!
-        private readonly string _dataDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(System.AppContext.BaseDirectory, @"..\..\..\..\Data"));
+        // Replace the old _dataDir string with this:
+        private readonly string _dataDir = FindDataDirectory();
+
+        private static string FindDataDirectory()
+        {
+            // Start at the directory where the test DLL is running
+            var currentDir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+
+            // Search upward until we find a directory containing the "Data" folder
+            while (currentDir != null)
+            {
+                string potentialDataDir = System.IO.Path.Combine(currentDir.FullName, "Data");
+                // Check if the directory exists AND contains our specific file
+                if (System.IO.Directory.Exists(potentialDataDir) &&
+                    System.IO.File.Exists(System.IO.Path.Combine(potentialDataDir, "gnubg_ts0.bd")))
+                {
+                    return potentialDataDir;
+                }
+                currentDir = currentDir.Parent; // Move up one folder
+            }
+
+            throw new System.IO.DirectoryNotFoundException("Could not find the 'Data' directory containing gnubg_ts0.bd.");
+        }
 
         [Fact]
         public void Classify_StartingPosition_IsContact()
