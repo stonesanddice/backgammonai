@@ -1,83 +1,72 @@
-﻿// using EngineCore;
-// using Xunit;
-//
-// namespace EngineTests;
-//
-// public class BoardClassifierTests
-// {
-//     private readonly BoardClassifier _classifier = new();
-//
-//     [Fact]
-//     public void Classify_StartingPosition_IsContact()
-//     {
-//         // The standard starting position is the ultimate "Contact" state.
-//         var state = PositionIdParser.Parse("4HPwATDbt/AABA");
-//         Assert.Equal(PositionClass.Contact, _classifier.Classify(state));
-//     }
-//
-//     [Fact]
-//     public void Classify_DeepRace_IsRace()
-//     {
-//         // A late-game race where players have passed each other but aren't in home boards yet.
-//         var state = new GameState();
-//         // Player 1 furthest back is point 10 (index 9)
-//         state.Player1Checkers[9] = 15;
-//         // Player 2 furthest back is point 10 (index 9)
-//         state.Player2Checkers[9] = 15;
-//         
-//         // Sum of back points (9 + 9 = 18) is <= 22, so no contact.
-//         // Back points > 5, so it is a Race.
-//         Assert.Equal(PositionClass.Race, _classifier.Classify(state));
-//     }
-//
-//     [Fact]
-//     public void Classify_CrunchedBoard_IsCrashed()
-//     {
-//         // GNUbg classifies positions as "Crashed" if a player is deeply crunched.
-//         var state = new GameState();
-//         
-//         // Player 2 has 12 checkers on the 1-point and 3 elsewhere (total 15).
-//         state.Player2Checkers[0] = 12; 
-//         state.Player2Checkers[1] = 3;
-//         
-//         // Player 1 is still far back, so they are technically in "Contact".
-//         state.Player1Checkers[20] = 15;
-//
-//         // IsCrashed logic: (Total 15 - Checkers on 1-point 12) = 3. 3 <= Threshold 6.
-//         Assert.Equal(PositionClass.Crashed, _classifier.Classify(state));
-//     }
-//
-//     [Fact]
-//     public void Classify_SimpleBearoff_IsBearoffTwoSided()
-//     {
-//         // A position where both players are deep in their home boards.
-//         var state = new GameState();
-//         state.Player1Checkers[0] = 5; // 5 checkers on the 1-point
-//         state.Player2Checkers[1] = 5; // 5 checkers on the 2-point
-//
-//         // PositionBearoff for these will be < 923.
-//         Assert.Equal(PositionClass.BearoffTwoSided, _classifier.Classify(state));
-//     }
-//
-//     [Fact]
-//     public void Classify_ComplexBearoff_IsBearoffOneSided()
-//     {
-//         // A position with many checkers high up in the home board.
-//         var state = new GameState();
-//         state.Player1Checkers[5] = 15; // All 15 checkers on the 6-point
-//         state.Player2Checkers[0] = 15;
-//
-//         // The Position ID for 15 checkers on the 6-point is 15503, which is > 923.
-//         Assert.Equal(PositionClass.BearoffOneSided, _classifier.Classify(state));
-//     }
-//
-//     [Fact]
-//     public void Classify_OnePlayerFinished_IsOver()
-//     {
-//         var state = new GameState();
-//         // Player 1 has borne everything off (all zeros).
-//         state.Player2Checkers[0] = 15;
-//
-//         Assert.Equal(PositionClass.Over, _classifier.Classify(state));
-//     }
-// }
+﻿using EngineCore;
+using Xunit;
+
+namespace EngineTests
+{
+    public class BoardClassifierTests
+    {
+        private readonly BoardClassifier _classifier = new();
+
+        // Ensure this path maps back to your root Data folder from the bin output directory!
+        private readonly string _dataDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(System.AppContext.BaseDirectory, @"..\..\..\..\Data"));
+
+        [Fact]
+        public void Classify_StartingPosition_IsContact()
+        {
+            var state = new GameState();
+            // Manually set up the starting board to test the classifier in isolation
+            state.Player1Checkers[5] = 5; state.Player1Checkers[7] = 3;
+            state.Player1Checkers[12] = 5; state.Player1Checkers[23] = 2;
+
+            state.Player2Checkers[5] = 5; state.Player2Checkers[7] = 3;
+            state.Player2Checkers[12] = 5; state.Player2Checkers[23] = 2;
+
+            Assert.Equal(PositionClass.Contact, _classifier.Classify(state));
+        }
+
+        [Fact]
+        public void Classify_DeepRace_IsRace()
+        {
+            var state = new GameState();
+            state.Player1Checkers[9] = 15;
+            state.Player2Checkers[9] = 15;
+
+            Assert.Equal(PositionClass.Race, _classifier.Classify(state));
+        }
+
+        [Fact]
+        public void Classify_CrunchedBoard_IsCrashed()
+        {
+            var state = new GameState();
+
+            state.Player2Checkers[0] = 12;
+            state.Player2Checkers[1] = 3;
+
+            // FIX: Move Player 1 to the Bar/24-point so they overlap and contact is still possible!
+            state.Player1Checkers[24] = 15;
+
+            Assert.Equal(PositionClass.Crashed, _classifier.Classify(state));
+        }
+
+        [Fact]
+        public void Evaluate_ValidTwoSidedPosition_ReturnsCorrectWinProbability()
+        {
+            var evaluator = new BearoffEvaluator(_dataDir);
+
+            // FIX: Let the classifier generate the true IDs for "1 checker on the 1-point"
+            var p1Board = new int[25]; p1Board[0] = 1;
+            var p2Board = new int[25]; p2Board[0] = 1;
+
+            uint actualId1 = _classifier.GetPositionBearoff(p1Board);
+            uint actualId2 = _classifier.GetPositionBearoff(p2Board);
+
+            var probs = evaluator.Evaluate(actualId1, actualId2, PositionClass.BearoffTwoSided);
+
+            Assert.NotNull(probs);
+            Assert.Equal(5, probs.Length);
+
+            // The Win probability MUST be 100% since P1 is on roll.
+            Assert.True(probs[0] > 0.999f, $"Expected ~1.0, but got {probs[0]}");
+        }
+    }
+}

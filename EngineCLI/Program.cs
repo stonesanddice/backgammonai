@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using EngineCore;
 
 namespace EngineCLI
@@ -7,68 +8,112 @@ namespace EngineCLI
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("==================================================");
+            Console.WriteLine("        BACKGAMMON GRANDMASTER AI ARENA           ");
+            Console.WriteLine("==================================================");
+
+            // 1. Initialize the Brains
+            Console.WriteLine("Loading Engine Components...");
+
+            // NOTE: We are passing a dummy NeuralNet for now until you parse gnubg.weights
+            NeuralNet dummyNet = new NeuralNet(inputs: 250, hidden: 128, outputs: 5, trainedIters: 0, betaH: 1f, betaO: 1f);
+
+            string dataDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\Data"));
+            BearoffEvaluator bearoffEval = new BearoffEvaluator(dataDir); // Will load the TS database perfectly!
             CubeEvaluator cubeEval = new CubeEvaluator();
 
-            // We'll use the same "Borderline Advantage" probabilities
-            // Win: 72%, WinG: 10%, WinBG: 1% | Lose: 28%, LoseG: 10%, LoseBG: 1%
-            Probabilities probs = new Probabilities(0.72f, 0.10f, 0.01f, 0.10f, 0.01f);
+            SearchEngine ai = new SearchEngine(dummyNet, null, bearoffEval, cubeEval);
+            Console.WriteLine("Engine Ready!\n");
 
-            // Three wildly different match scenarios
-            var testCases = new[]
+            // 2. Setup the Match and Board
+            MatchState match = new MatchState
             {
-                new {
-                    Name = "Early Match (4-away / 4-away)",
-                    PlayerAway = 4, OppAway = 4, Crawford = false
-                },
-                new {
-                    Name = "2-away / 2-away (The 2-away trick)",
-                    PlayerAway = 2, OppAway = 2, Crawford = false
-                },
-                new {
-                    Name = "Crawford Game (1-away / 3-away)",
-                    PlayerAway = 1, OppAway = 3, Crawford = true
-                }
+                MatchLength = 0, // Money game
+                JacobyRule = true,
+                BeaversAllowed = true
             };
 
-            foreach (var test in testCases)
+            GameState state = CreateStartingPosition();
+            Random rng = new Random();
+            int turnCount = 1;
+            bool gameIsOver = false;
+
+            // 3. The Game Loop
+            while (!gameIsOver)
             {
-                Console.WriteLine($"\n==================================================");
-                Console.WriteLine($" CASE: {test.Name}");
-                Console.WriteLine($"==================================================");
+                // Roll Dice
+                state.Dice1 = rng.Next(1, 7);
+                state.Dice2 = rng.Next(1, 7);
 
-                int currentCube = 1;
-                int centeredCubeOwner = -1; // -1 = centered
-                int opponentCubeOwner = 1;  // 1 = opponent owns it
-                bool canWinGammon = probs.WinGammon > 0.0f;
+                // Draw the board!
+                BoardVisualizer.PrintBoard(state, match);
 
-                // Check if the rules even allow a double
-                bool isLive = cubeEval.IsCubeLiveInMatch(test.PlayerAway, test.OppAway, currentCube, test.Crawford);
+                // Ask the AI for the best move (Using 1-ply. Change to 2-ply once weights are loaded!)
+                Turn? bestTurn = ai.GetBestTurn(state, match, depth: 1);
 
-                // 1. MWC if we DO NOT double (Cube stays at 1, Centered)
-                // We use the new Cubeful MWC calculation!
-                float mwcNoDouble = cubeEval.CalculateCubefulMwc(probs, test.PlayerAway, test.OppAway, currentCube, centeredCubeOwner);
+                if (bestTurn == null || bestTurn.Moves.Count == 0)
+                {
+                    Console.WriteLine(">> AI Dances! (No legal moves)\n");
+                }
+                else
+                {
+                    Console.WriteLine($">> AI Plays: {bestTurn}\n");
+                    state = bestTurn.ResultingState;
+                }
 
-                // 2. MWC if we DOUBLE and opponent TAKES (Cube becomes 2, Opponent owns it)
-                float mwcDoubleTake = cubeEval.CalculateCubefulMwc(probs, test.PlayerAway, test.OppAway, currentCube * 2, opponentCubeOwner);
+                // Check for Game Over 
+                if (HasWon(state.Player1Checkers) || HasWon(state.Player2Checkers))
+                {
+                    Console.WriteLine("\n==================================================");
+                    Console.WriteLine($" GAME OVER! Player {(HasWon(state.Player1Checkers) ? 1 : 0)} Wins!");
+                    Console.WriteLine("==================================================");
+                    BoardVisualizer.PrintBoard(state, match);
+                    gameIsOver = true;
+                    break;
+                }
 
-                // 3. MWC if we DOUBLE and opponent PASSES 
-                // (We win 1 point, so our away score drops by 1)
-                float mwcDoublePass = MatchEquityTable.GetMatchWinningChance(test.PlayerAway - 1, test.OppAway);
+                // Swap turns
+                state.PlayerOnRoll = 1 - state.PlayerOnRoll;
 
-                // 4. Determine Match Action based purely on MWC
-                CubeAction action = cubeEval.GetMatchCubeAction(mwcNoDouble, mwcDoubleTake, mwcDoublePass, canWinGammon, isLive);
+                // When we swap turns, we must physically swap the arrays so the engine 
+                // always evaluates from the perspective of the player "On Roll"
+                int[] temp = state.Player1Checkers;
+                state.Player1Checkers = state.Player2Checkers;
+                state.Player2Checkers = temp;
 
-                Console.WriteLine($" Match Score  : You {test.PlayerAway}-away, Opp {test.OppAway}-away");
-                Console.WriteLine($" Crawford Rule: {test.Crawford}");
-                Console.WriteLine($" Cube is Live : {isLive}");
-                Console.WriteLine($"\n Match Winning Chances (MWC):");
-                Console.WriteLine($"   No Double    : {mwcNoDouble:P2}");
-                Console.WriteLine($"   Double / Take: {mwcDoubleTake:P2}");
-                Console.WriteLine($"   Double / Pass: {mwcDoublePass:P2}");
+                ai.ClearCache();
+                turnCount++;
 
-                Console.WriteLine($"\n -> RECOMMENDED ACTION: {action}");
-                Console.WriteLine("==================================================\n");
+                // Pause for 1.5 seconds so you can watch the game unfold like a movie
+                Thread.Sleep(1500);
             }
+        }
+
+        static GameState CreateStartingPosition()
+        {
+            var state = new GameState();
+
+            // Player 1 (Opponent)
+            state.Player1Checkers[5] = 5;
+            state.Player1Checkers[7] = 3;
+            state.Player1Checkers[12] = 5;
+            state.Player1Checkers[23] = 2;
+
+            // Player 0 (AI)
+            state.Player2Checkers[5] = 5;
+            state.Player2Checkers[7] = 3;
+            state.Player2Checkers[12] = 5;
+            state.Player2Checkers[23] = 2;
+
+            state.PlayerOnRoll = 0;
+            return state;
+        }
+
+        static bool HasWon(int[] checkers)
+        {
+            int totalCheckers = 0;
+            for (int i = 0; i < 25; i++) totalCheckers += checkers[i];
+            return totalCheckers == 0;
         }
     }
 }

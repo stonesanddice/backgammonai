@@ -29,4 +29,13 @@
     <ProjectReference Include="..\EngineCore\EngineCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data\gnubg_ts0.bd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Data\gnubg_os0.bd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
 </Project>
