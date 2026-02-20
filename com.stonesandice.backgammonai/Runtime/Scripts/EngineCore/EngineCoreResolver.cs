@@ -31,7 +31,7 @@ namespace EngineCore
         {
             // Start at the execution directory (e.g., bin/Debug/net7.0)
             var currentDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-            
+
             while (currentDir != null)
             {
                 // Check for the Data folder in the current directory

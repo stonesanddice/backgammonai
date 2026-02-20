@@ -18,7 +18,7 @@ namespace EngineCore.Tests
                 // Look for the specific UPM package data path
                 string potential = System.IO.Path.Combine(currentDir.FullName, "com.stonesandice.backgammonai", "Runtime", "Data");
                 if (System.IO.Directory.Exists(potential)) return potential;
-        
+
                 // Fallback for standard root Data folder
                 string rootData = System.IO.Path.Combine(currentDir.FullName, "Data");
                 if (System.IO.Directory.Exists(rootData)) return rootData;
@@ -27,7 +27,7 @@ namespace EngineCore.Tests
             }
             throw new System.IO.DirectoryNotFoundException("Data folder not found in any parent directories.");
         }
-        
+
         [Fact]
         public void Evaluate_ValidTwoSidedPosition_ReturnsCorrectWinProbability()
         {
