@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace EngineCore
@@ -164,7 +164,7 @@ namespace EngineCore
 
                 PositionClass pc = _classifier.Classify(state);
 
-                if (pc == PositionClass.BearoffTwoSided)
+                if (pc == PositionClass.BearoffTwoSided || pc == PositionClass.BearoffOneSided)
                 {
                     uint id1 = _classifier.GetPositionBearoff(onRoll);
                     uint id2 = _classifier.GetPositionBearoff(waiting);
@@ -202,5 +202,14 @@ namespace EngineCore
         }
 
         public void ClearCache() => _cache.Clear();
+
+        /// <summary>
+        /// Returns the cubeful equity of a position from the perspective of the player on roll (Player 1).
+        /// Used for analysis, CLI hints, and strength tests (no-blunder assertions).
+        /// </summary>
+        public float GetEquity(GameState state, MatchState match)
+        {
+            return EvaluateStatic(state, match);
+        }
     }
 }

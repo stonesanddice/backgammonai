@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using EngineCore; // Adjust if your namespace is different
 
@@ -78,6 +78,24 @@ namespace EngineTests
 
             // Act & Assert
             Assert.Throws<FormatException>(() => PositionId.Decode(invalidId));
+        }
+
+        [Fact]
+        public void Parse_StartingPosition_PipCountIs167PerSide()
+        {
+            GameState state = PositionId.Decode(StartingPositionId);
+            int pipCountP1 = PipCount(state.Player1Checkers);
+            int pipCountP2 = PipCount(state.Player2Checkers);
+            Assert.Equal(167, pipCountP1);
+            Assert.Equal(167, pipCountP2);
+        }
+
+        private static int PipCount(int[] checkers)
+        {
+            int pips = 0;
+            for (int i = 0; i < 24; i++) pips += checkers[i] * (i + 1);
+            pips += checkers[24] * 25;
+            return pips;
         }
     }
 }

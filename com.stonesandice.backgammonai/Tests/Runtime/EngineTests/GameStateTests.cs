@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 using EngineCore;
 
 namespace EngineTests
@@ -80,6 +80,51 @@ namespace EngineTests
 
             // Assert
             Assert.Equal(count, state.Player1Checkers[index]);
+        }
+
+        [Fact]
+        public void GetCheckers_ReflectsBoardArray()
+        {
+            var state = new GameState();
+            // Board[player, point] uses 0-based point index (0-23 = points 1-24, 24 = bar)
+            state.Board[0, 0] = 3; // Player 0, point 1
+            state.Board[0, 23] = 2; // Player 0, point 24
+
+            Assert.Equal(3, state.GetCheckers(0, 1));
+            Assert.Equal(2, state.GetCheckers(0, 24));
+        }
+
+        [Fact]
+        public void GetCheckersOnBar_ReflectsBoardSlot24()
+        {
+            var state = new GameState();
+            state.Board[0, 24] = 2;
+            state.Board[1, 24] = 1;
+
+            Assert.Equal(2, state.GetCheckersOnBar(0));
+            Assert.Equal(1, state.GetCheckersOnBar(1));
+        }
+
+        [Fact]
+        public void GetCheckersOffBoard_CountsCorrectly()
+        {
+            var state = new GameState();
+            // 15 total; put 10 on board/bar, 5 off
+            state.Board[0, 0] = 5;
+            state.Board[0, 5] = 5;
+            state.Board[0, 24] = 0;
+
+            Assert.Equal(5, state.GetCheckersOffBoard(0));
+        }
+
+        [Fact]
+        public void GetCheckersOffBoard_AllOnBoard_ReturnsZero()
+        {
+            var state = new GameState();
+            for (int i = 0; i < 25; i++) state.Board[0, i] = 0;
+            state.Board[0, 5] = 15;
+
+            Assert.Equal(0, state.GetCheckersOffBoard(0));
         }
     }
 }
