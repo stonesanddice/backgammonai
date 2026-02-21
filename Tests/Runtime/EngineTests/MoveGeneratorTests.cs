@@ -1,4 +1,4 @@
-﻿using Xunit;
+using Xunit;
 using EngineCore;
 using System.Linq;
 
@@ -70,6 +70,86 @@ namespace EngineCore.Tests
 
             int maxMoves = turns.Max(t => t.Moves.Count);
             Assert.All(turns, t => Assert.Equal(maxMoves, t.Moves.Count));
+        }
+
+        [Fact]
+        public void GenerateLegalTurns_NoLegalMoves_ReturnsEmptyList()
+        {
+            var state = new GameState
+            {
+                Player1Checkers = new int[25],
+                Player2Checkers = new int[25],
+                Dice1 = 1,
+                Dice2 = 2
+            };
+            state.Player1Checkers[24] = 1; // One on bar
+            // From bar we land on our points 18-23; opponent point = 23 - ourPoint, so block opponent 0-5
+            for (int i = 0; i <= 5; i++) state.Player2Checkers[i] = 2;
+
+            var turns = MoveGenerator.GenerateLegalTurns(state);
+
+            Assert.Empty(turns);
+        }
+
+        [Fact]
+        public void GenerateLegalTurns_Doubles_FourMovesOfSameDie()
+        {
+            var state = new GameState
+            {
+                Player1Checkers = new int[25],
+                Player2Checkers = new int[25],
+                Dice1 = 6,
+                Dice2 = 6
+            };
+            state.Player1Checkers[23] = 4; // Four on 24-point; can use 6-6 four times
+
+            var turns = MoveGenerator.GenerateLegalTurns(state);
+
+            Assert.NotEmpty(turns);
+            Assert.Contains(turns, t => t.Moves.Count == 4 && t.DiceUsed.Count == 4);
+        }
+
+        [Fact]
+        public void GenerateLegalTurns_AllInHome_CanBearOff()
+        {
+            var state = new GameState
+            {
+                Player1Checkers = new int[25],
+                Player2Checkers = new int[25],
+                Dice1 = 1,
+                Dice2 = 6
+            };
+            state.Player1Checkers[0] = 1;  // 1-point
+            state.Player1Checkers[5] = 14; // 6-point
+
+            var turns = MoveGenerator.GenerateLegalTurns(state);
+
+            Assert.NotEmpty(turns);
+            Assert.Contains(turns, t => t.Moves.Any(m => m.To == -1));
+        }
+
+        [Fact]
+        public void ApplyTurn_ProducesStateWithMovesApplied()
+        {
+            var state = new GameState
+            {
+                Player1Checkers = new int[25],
+                Player2Checkers = new int[25],
+                Dice1 = 3,
+                Dice2 = 1
+            };
+            state.Player1Checkers[23] = 2;
+            state.Player1Checkers[12] = 5;
+            var turn = new Turn();
+            turn.Moves.Add(new Move { From = 23, To = 20 }); // one checker 24->21
+            turn.Moves.Add(new Move { From = 20, To = 19 }); // that checker 21->20
+            turn.DiceUsed.AddRange(new[] { 3, 1 });
+
+            var result = MoveGenerator.ApplyTurn(state, turn);
+
+            Assert.Equal(1, result.Player1Checkers[23]); // one left on 24-point
+            Assert.Equal(0, result.Player1Checkers[20]);
+            Assert.Equal(1, result.Player1Checkers[19]); // one moved to 20-point
         }
     }
 }

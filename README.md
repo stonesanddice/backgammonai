@@ -32,7 +32,7 @@ BackgammonAI is a high-performance backgammon engine written in C# and optimized
 
 1. **Clone the Repository**:
 ```bash
-git clone https://github.com/yourusername/BackgammonAI.git
+git clone https://github.com/StonesAndDice/BackgammonAI.git
 
 ```
 
