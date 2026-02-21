@@ -1,4 +1,4 @@
-﻿using EngineCore;
+using EngineCore;
 using Xunit;
 
 namespace EngineTests
@@ -86,6 +86,36 @@ namespace EngineTests
 
             // The Win probability MUST be 100% since P1 is on roll.
             Assert.True(probs[0] > 0.999f, $"Expected ~1.0, but got {probs[0]}");
+        }
+
+        [Fact]
+        public void Classify_GameOver_IsOver()
+        {
+            var state = new GameState();
+            state.Player1Checkers[0] = 15;  // P1 all on 1-point (e.g. about to bear off)
+            state.Player2Checkers = new int[25]; // P2 has no checkers (borne off)
+
+            Assert.Equal(PositionClass.Over, _classifier.Classify(state));
+        }
+
+        [Fact]
+        public void GetPositionBearoff_AllOnOnePoint_ReturnsConsistentId()
+        {
+            var board = new int[25];
+            board[0] = 15;
+            uint id1 = _classifier.GetPositionBearoff(board);
+            uint id2 = _classifier.GetPositionBearoff(board);
+            Assert.Equal(id1, id2);
+        }
+
+        [Fact]
+        public void GetPositionBearoff_DifferentPlacements_ReturnDifferentIds()
+        {
+            var boardA = new int[25]; boardA[0] = 15;
+            var boardB = new int[25]; boardB[1] = 15;
+            uint idA = _classifier.GetPositionBearoff(boardA);
+            uint idB = _classifier.GetPositionBearoff(boardB);
+            Assert.NotEqual(idA, idB);
         }
     }
 }
