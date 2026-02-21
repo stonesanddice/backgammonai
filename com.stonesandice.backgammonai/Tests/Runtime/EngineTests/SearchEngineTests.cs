@@ -56,7 +56,7 @@ namespace EngineTests
 
             Assert.NotNull(turn);
             Assert.True(turn!.Moves.Count >= 1);
-          }
+        }
 
         [Fact]
         public void GetBestTurn_StartingPosition_ReturnsNonNullTurn()
