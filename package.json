@@ -4,6 +4,9 @@
   "displayName": "Backgammon Grandmaster AI",
   "description": "A world-class Backgammon engine using neural networks and 2-ply search.",
   "unity": "2021.3",
+  "documentationUrl": "https://github.com/StonesAndDice/BackgammonAI/blob/main/com.stonesandice.backgammonai/Documentation~/index.md",
+  "changelogUrl": "https://github.com/StonesAndDice/BackgammonAI/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/StonesAndDice/BackgammonAI/blob/main/LICENSE",
   "author": {
     "name": "David Reay",
     "email": "david@stonesandice.com"
@@ -11,6 +14,9 @@
   "keywords": [
     "ai",
     "backgammon",
-    "engine"
+    "engine",
+    "neural network",
+    "gnubg",
+    "board game"
   ]
 }
