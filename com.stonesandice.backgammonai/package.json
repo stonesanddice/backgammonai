@@ -1,6 +1,6 @@
 ﻿{
   "name": "com.stonesandice.backgammon-engine",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Backgammon Grandmaster AI",
   "description": "A world-class Backgammon engine using neural networks and 2-ply search.",
   "unity": "2021.3",
